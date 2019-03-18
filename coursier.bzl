@@ -16,6 +16,9 @@ load("//:specs.bzl", "parse", "utils")
 
 _BUILD = """
 package(default_visibility = ["//visibility:public"])
+
+load("@{repository_name}//:no_ijar_java_import.bzl", "no_ijar_java_import")
+
 {imports}
 """
 
@@ -37,6 +40,12 @@ def _is_linux(repository_ctx):
 
 def _is_macos(repository_ctx):
     return repository_ctx.os.name.find("mac") != -1
+
+def _contains_kotlin_module(repository_ctx, artifact_relative_path):
+    exec_result = repository_ctx.execute(["jar", "tf", artifact_relative_path])
+    if exec_result.return_code != 0:
+        fail("Error trying to read the contents of " + artifact_relative_path)
+    return exec_result.stdout.find("kotlin_module") != -1
 
 # The representation of a Windows path when read from the parsed Coursier JSON
 # is delimited by 4 back slashes. Replace them with 1 forward slash.
@@ -64,6 +73,7 @@ def _relativize_and_symlink_file(repository_ctx, absolute_path):
         artifact_relative_path = "v1/" + absolute_path_parts[1]
         repository_ctx.symlink(absolute_path, repository_ctx.path(artifact_relative_path))
     return artifact_relative_path
+
 
 # Generate BUILD file with java_import and aar_import for each artifact in
 # the transitive closure, with their respective deps mapped to the resolved
@@ -135,7 +145,16 @@ def generate_imports(repository_ctx, dep_tree, srcs_dep_tree = None):
             #
             packaging = artifact_relative_path.split(".").pop()
             if packaging == "jar":
-                target_import_string = ["java_import("]
+                # Check if this JAR contains a Kotlin module. If it does, use a
+                # version of java_import that does not invoke ijar. ijar
+                # removes Kotlin metadata on inlined functions aggressively,
+                # resulting in bad builds.
+                #
+                # See: https://github.com/bazelbuild/bazel/issues/4549
+                if _contains_kotlin_module(repository_ctx, artifact_relative_path):
+                    target_import_string = ["no_ijar_java_import("]
+                else:
+                    target_import_string = ["java_import("]
             elif packaging == "aar":
                 target_import_string = ["aar_import("]
             else:
@@ -383,9 +402,18 @@ def _coursier_fetch_impl(repository_ctx):
         srcs_dep_tree = srcs_dep_tree,
     )
 
+    repository_ctx.template(
+        "no_ijar_java_import.bzl",
+        repository_ctx.attr._no_ijar_java_import,
+        executable = False,
+    )
+
     repository_ctx.file(
         "BUILD",
-        _BUILD.format(imports = generated_imports),
+        _BUILD.format(
+            repository_name = repository_ctx.name,
+            imports = generated_imports
+        ),
         False,  # not executable
     )
 
@@ -402,6 +430,7 @@ def _coursier_fetch_impl(repository_ctx):
 coursier_fetch = repository_rule(
     attrs = {
         "_coursier": attr.label(default = "//:third_party/coursier/coursier"),  # vendor coursier, it's just a jar
+        "_no_ijar_java_import": attr.label(default = "//:private/no_ijar_java_import.bzl"),  # vendor coursier, it's just a jar
         "repositories": attr.string_list(),  # list of repository objects, each as json
         "artifacts": attr.string_list(),  # list of artifact objects, each as json
         "fetch_sources": attr.bool(default = False),
