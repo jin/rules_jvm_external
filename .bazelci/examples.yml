@@ -38,3 +38,21 @@ tasks:
     build_targets:
     - "//src/main:greeter_app"
     - "//src/test:greeter_test_app"
+  android-kotlin-linux:
+    name: "Android Kotlin example"
+    platform: ubuntu1804
+    working_directory: examples/android_kotlin_app
+    build_targets:
+    - "//:app"
+  android-kotlin-macos:
+    name: "Android Kotlin example"
+    platform: macos
+    working_directory: examples/android_kotlin_app
+    build_targets:
+    - "//:app"
+  android-kotlin-windows:
+    name: "Android Kotlin example"
+    platform: windows
+    working_directory: examples/android_kotlin_app
+    build_targets:
+    - "//:app"
