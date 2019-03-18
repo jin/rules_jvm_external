@@ -74,7 +74,6 @@ def _relativize_and_symlink_file(repository_ctx, absolute_path):
         repository_ctx.symlink(absolute_path, repository_ctx.path(artifact_relative_path))
     return artifact_relative_path
 
-
 # Generate BUILD file with java_import and aar_import for each artifact in
 # the transitive closure, with their respective deps mapped to the resolved
 # tree.
@@ -430,7 +429,7 @@ def _coursier_fetch_impl(repository_ctx):
 coursier_fetch = repository_rule(
     attrs = {
         "_coursier": attr.label(default = "//:third_party/coursier/coursier"),  # vendor coursier, it's just a jar
-        "_no_ijar_java_import": attr.label(default = "//:private/no_ijar_java_import.bzl"),  # vendor coursier, it's just a jar
+        "_no_ijar_java_import": attr.label(default = "//:private/no_ijar_java_import.bzl"),
         "repositories": attr.string_list(),  # list of repository objects, each as json
         "artifacts": attr.string_list(),  # list of artifact objects, each as json
         "fetch_sources": attr.bool(default = False),

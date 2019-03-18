@@ -89,12 +89,36 @@ maven_install(
     use_unsafe_shared_cache = True,
 )
 
+maven_install(
+    name = "kotlin_tests_maven",
+    artifacts = [
+        "junit:junit:4.12",
+        "org.jetbrains.kotlin:kotlin-test:1.3.21",
+    ],
+    repositories = [
+        "https://repo1.maven.org/maven2",
+    ],
+)
+
+RULES_KOTLIN_VERSION = "da1232eda2ef90d4375e2d1677b32c7ddf09e8a1"
+http_archive(
+    name = "io_bazel_rules_kotlin",
+    strip_prefix = "rules_kotlin-%s" % RULES_KOTLIN_VERSION,
+    url = "https://github.com/bazelbuild/rules_kotlin/archive/%s.tar.gz" % RULES_KOTLIN_VERSION,
+    sha256 = "0bbb0e5e536f0c775f37bded59d4f8cfb8556e6c3d926fcc0f58bf3489bff470",
+)
+load("@io_bazel_rules_kotlin//kotlin:kotlin.bzl", "kotlin_repositories", "kt_register_toolchains")
+
+kotlin_repositories()
+kt_register_toolchains()
+
 BAZEL_SKYLIB_TAG = "0.6.0"
 
 http_archive(
     name = "bazel_skylib",
     strip_prefix = "bazel-skylib-%s" % BAZEL_SKYLIB_TAG,
     url = "https://github.com/bazelbuild/bazel-skylib/archive/%s.tar.gz" % BAZEL_SKYLIB_TAG,
+    sha256 = "eb5c57e4c12e68c0c20bc774bfbc60a568e800d025557bc4ea022c6479acc867",
 )
 
 # End test dependencies
