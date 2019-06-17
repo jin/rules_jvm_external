@@ -21,11 +21,11 @@ bazel_skylib_workspace()
 
 load("@bazel_tools//tools/build_defs/repo:git.bzl", "git_repository")
 
-git_repository(
+http_archive(
     name = "io_bazel_skydoc",
-    remote = "https://github.com/bazelbuild/skydoc.git",
-    commit = "e235d7d6dec0241261bdb13d7415f3373920e6fd",
-    shallow_since = "1554317371 -0400",
+    urls = ["https://github.com/bazelbuild/skydoc/archive/0.3.0.tar.gz"],
+    strip_prefix = "skydoc-0.3.0",
+    sha256 = "c2d66a0cc7e25d857e480409a8004fdf09072a1bd564d6824441ab2f96448eea",
 )
 
 # Stardoc also depends on skydoc_repositories, rules_sass, rules_nodejs, but our
